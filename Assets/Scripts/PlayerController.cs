@@ -48,5 +48,16 @@ public class PlayerController : MonoBehaviour
         {
             canJump = true;
         }
+
+
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject.CompareTag("Void"))
+        {
+            transform.position = new Vector3(0, 1, 0);
+            rb.linearVelocity = Vector3.zero;
+        }
     }
 }
