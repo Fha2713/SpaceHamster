@@ -4,50 +4,49 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
-    [SerializeField] float FlySpeed = 10f;
-    [SerializeField] float MouseSensitivity = 2f;
-
+    [SerializeField] private float speed = 0;
+    
     private Rigidbody rb;
-    private Camera cam;
-    private Vector3 moveInput;
-    private float yaw;
-    private float pitch;
+    private int count;
+    private float movementX;
+    private float movementY;
 
+    private bool canJump = false;
+    
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-        rb.useGravity = false;
-        rb.linearDamping = 0f;
-        cam = Camera.main;
-        yaw = transform.eulerAngles.y;
-        pitch = transform.eulerAngles.x;
-        Cursor.lockState = CursorLockMode.Locked;
+        count = 0;
     }
 
-    void Update()
+    void OnMove(InputValue movementValue)
     {
-        // Handle look
-        transform.rotation = Quaternion.Euler(0, yaw, 0);
-        cam.transform.localRotation = Quaternion.Euler(pitch, 0, 0);
+        Vector2 movementVector = movementValue.Get<Vector2>();
+        
+        movementX = movementVector.x;
+        movementY = movementVector.y;
+    }
+    
+    void OnJump(InputValue jumpValue)
+    {
+        if (jumpValue.isPressed && canJump)
+        {
+            rb.AddForce(new Vector3(0, 5, 0), ForceMode.Impulse);
+            canJump = false;
+        }
     }
 
     void FixedUpdate()
     {
-        // Move in the look direction (camera's forward/right/up)
-        Vector3 direction = (transform.right * moveInput.x) + (cam.transform.forward * moveInput.y);
-        rb.linearVelocity = direction.normalized * FlySpeed;
+        Vector3 movement = new Vector3(movementX, 0.0f, movementY);
+        rb.AddForce(movement * speed);
     }
 
-    void OnMove(InputValue value)
+    private void OnCollisionEnter(Collision other)
     {
-        moveInput = value.Get<Vector2>();
-    }
-
-    void OnLook(InputValue value)
-    {
-        Vector2 look = value.Get<Vector2>() * MouseSensitivity;
-        yaw += look.x;
-        pitch -= look.y;
-        pitch = Mathf.Clamp(pitch, -89f, 89f);
+        if (other.gameObject.CompareTag("Ground"))
+        {
+            canJump = true;
+        }
     }
 }
